@@ -1,0 +1,1194 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUNKER // SYSTEM CONTROL</title>
+    <style>
+        :root {
+            --bg-overlay: rgba(10, 11, 13, 0.93); 
+            --panel-bg: rgba(20, 22, 26, 0.96);
+            --border-color: #4b5563; 
+            --text-main: #f3f4f6;    
+            --text-muted: #8892b0;   
+            --accent: #f59e0b;       
+            --success: #10b981;  
+            --danger: #ef4444;   
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Courier New', Courier, monospace, sans-serif;
+            background-image: url('https://unsplash.com'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: var(--text-main);
+            overflow: hidden; 
+        }
+
+        /* КАСТОМНЫЙ ТЕМНО-СЕРЫЙ СКРОЛЛБАР */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0b0d;
+            border-left: 1px solid var(--border-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        .system-wrapper {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(4px); 
+            box-sizing: border-box;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* СТАРТОВЫЙ ЭКРАН */
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .start-screen h1 {
+            font-size: 54px; 
+            font-weight: 900;
+            letter-spacing: 8px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .input-block {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        .input-block label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .input-terminal {
+            background: #0a0b0d;
+            border: 1px solid var(--border-color);
+            color: var(--accent);
+            padding: 12px 20px;
+            font-family: inherit;
+            font-size: 18px;
+            text-align: center;
+            width: 300px;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+        }
+
+        .input-terminal:focus { border-color: var(--accent); }
+
+        .input-error {
+            border-color: var(--danger) !important;
+            animation: terminal-blink 0.4s infinite alternate;
+        }
+
+        @keyframes terminal-blink {
+            0% { box-shadow: 0 0 4px rgba(239, 68, 68, 0.2); }
+            100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.7); }
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+            height: 15px;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 400px; 
+        }
+
+        .btn-terminal {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 12px 24px; 
+            font-family: inherit;
+            font-size: 15px; 
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn-terminal:hover { background: #1e222b; border-color: var(--text-main); }
+        .btn-terminal.primary { border-color: var(--accent); color: var(--accent); }
+        .btn-terminal.primary:hover { background: var(--accent); color: #000; }
+
+        /* ИГРОВОЙ ИНТЕРФЕЙС */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            height: 45px;
+            box-sizing: border-box;
+        }
+
+        header h2 {
+            font-size: 20px; 
+            margin: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .main-dash {
+            display: grid;
+            grid-template-columns: 300px 1fr 500px; 
+            gap: 20px;
+            flex-grow: 1;
+            height: calc(100vh - 100px); 
+            box-sizing: border-box;
+            transition: opacity 0.8s ease; /* Плавное исчезновение стола */
+        }
+
+        .dash-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: 100%;
+            overflow: hidden; 
+            box-sizing: border-box;
+        }
+
+        .terminal-block {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .block-header {
+            font-size: 14px; 
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed var(--border-color);
+            letter-spacing: 1px;
+        }
+
+        .env-panel { flex-grow: 1; overflow-y: auto; }
+        .env-item { margin-bottom: 20px; }
+        .env-label { font-size: 13px; text-transform: uppercase; font-weight: bold; color: var(--accent); margin-bottom: 6px; }
+        .env-text { font-size: 15px; line-height: 1.4; }
+
+        .passport-panel { flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .tabs-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        .nav-tab {
+            background: #111317;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 12px;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover { border-color: var(--text-main); }
+        .nav-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(245, 158, 11, 0.05); }
+        .nav-tab.dead { border-color: var(--danger) !important; color: var(--danger) !important; text-decoration: line-through; opacity: 0.5; }
+
+        .passport-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .card-row {
+            background: rgba(10, 11, 13, 0.85);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px; 
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        .card-status { font-size: 11px; padding: 1px 5px; border: 1px solid var(--border-color); }
+        .card-status.hidden { color: var(--accent); border-color: rgba(245, 158, 11, 0.4); }
+        .card-status.shared { color: var(--success); border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+
+        .card-body { font-size: 15px; line-height: 1.4; margin: 10px 0; flex-grow: 1; font-weight: bold; }
+        .blur-text { filter: blur(5px); opacity: 0.2; user-select: none; }
+
+        .btn-action {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px; 
+            font-family: inherit;
+            font-size: 11px; 
+            text-transform: uppercase;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-action:hover { background: #21252e; border-color: var(--text-main); }
+
+        .special-block { height: 110px; border-color: var(--danger); flex-shrink: 0; margin-top: 10px; }
+        .special-block .card-meta { color: var(--danger); }
+        .card-row.is-shared { border-color: var(--success); }
+
+        .log-panel { flex-grow: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        .log-output {
+            flex-grow: 1;
+            background: #0a0b0d;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            font-size: 14px; 
+            line-height: 1.5;
+            overflow-y: auto; 
+            color: #34d399; 
+            margin-bottom: 10px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .chat-input {
+            flex-grow: 1;
+            background: #0a0b0d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+        }
+        .chat-input:focus { border-color: var(--accent); }
+        .btn-send {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0 15px;
+            font-family: inherit;
+            font-size: 12px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .btn-send:hover { border-color: var(--accent); color: var(--accent); }
+
+        .vote-section {
+            margin-top: 10px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid var(--danger);
+            padding: 10px;
+            flex-shrink: 0;
+        }
+        .vote-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-vote {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--text-main);
+            padding: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .btn-vote:hover { background: var(--danger); color: #fff; }
+
+        /* ЭКРАН ИСТОРИИ ФИНАЛА */
+        .history-screen {
+            display: none;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            padding: 30px;
+            box-sizing: border-box;
+            flex-direction: column;
+            width: 100%;
+            height: calc(100vh - 100px);
+            overflow-y: auto;
+            opacity: 0; /* Изначально прозрачный для плавности */
+            transition: opacity 1.2s ease; /* Плавное проявление */
+        }
+
+        /* Класс запуска анимации появления финала */
+        .history-screen.visible {
+            opacity: 1;
+        }
+
+        .history-title {
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--accent);
+            text-transform: uppercase;
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .history-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-main);
+            white-space: pre-line;
+            margin-bottom: 30px;
+            background: #0a0b0d;
+            padding: 20px;
+            border: 1px solid #2d3748;
+        }
+
+        .history-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="system-wrapper" id="main-wrapper">
+
+    <!-- СТАРТОВАЯ СТРАНИЦА -->
+    <div id="start-screen" class="start-screen">
+        <h1>Бункер Онлайн</h1>
+        
+        <div class="input-block">
+            <label for="player-nickname">Идентификация пользователя:</label>
+            <input type="text" id="player-nickname" class="input-terminal" placeholder="ВВЕДИТЕ ИМЯ" maxlength="15" oninput="clearErrorState()">
+            <div id="error-box" class="error-message"></div>
+        </div>
+
+        <div class="menu-buttons">
+            <button class="btn-terminal primary" onclick="initGameMode('offline')">Одиночная игра</button>
+            <button class="btn-terminal" disabled style="opacity:0.3;">Играть онлайн</button>
+        </div>
+    </div>
+
+    <!-- ИГРОВОЙ ЭКРАН -->
+    <div id="game-table" style="display: none; height: 100%; flex-direction: column;">
+        <header>
+            <h2 id="mode-title">SYS.BUNKER // СЕССИЯ: ОДИНОЧНАЯ</h2>
+            <div class="header-controls">
+                <button class="btn-terminal" style="padding: 4px 12px; font-size: 12px;" onclick="toggleFullscreen()">[ ] Полный экран</button>
+                <button class="btn-terminal" style="padding: 4px 12px; font-size: 12px; border-color: var(--danger); color: var(--danger);" onclick="returnToMenu()">Выход в меню</button>
+            </div>
+        </header>
+
+        <div class="main-dash" id="main-game-dash">
+            <div class="dash-column">
+                <div class="terminal-block env-panel">
+                    <div class="block-header">Параметры среды</div>
+                    <div class="env-item"><div class="env-label">Катастрофа</div><div id="view-catastrophe" class="env-text">—</div></div>
+                    <div class="env-item"><div class="env-label">Бункер</div><div id="view-bunker" class="env-text">—</div></div>
+                    <div class="env-item"><div class="env-label">Угроза</div><div id="view-threat" class="env-text">—</div></div>
+                </div>
+            </div>
+
+            <div class="dash-column">
+                <div class="terminal-block passport-panel">
+                    <div class="tabs-container" id="tabs-list"></div>
+                    <div id="player-block-header" class="block-header">Личное дело</div>
+                    
+                    <div class="passport-grid">
+                        <div class="card-row" id="card-prof">
+                            <div><div class="card-meta"><span>Профессия</span> <span class="card-status hidden" id="status-prof">Скрыто</span></div><div id="c-prof" class="card-body">—</div></div>
+                            <button class="btn-action" id="btn-act-prof" onclick="shareCard('Профессия', 'prof', 'status-prof', 'card-prof')">Опубликовать данные</button>
+                        </div>
+                        <div class="card-row" id="card-bio">
+                            <div><div class="card-meta"><span>Биология</span> <span class="card-status hidden" id="status-bio">Скрыто</span></div><div id="c-bio" class="card-body">—</div></div>
+                            <button class="btn-action" id="btn-act-bio" onclick="shareCard('Биология', 'bio', 'status-bio', 'card-bio')">Опубликовать данные</button>
+                        </div>
+                        <div class="card-row" id="card-health">
+                            <div><div class="card-meta"><span>Здоровье</span> <span class="card-status hidden" id="status-health">Скрыто</span></div><div id="c-health" class="card-body">—</div></div>
+                            <button class="btn-action" id="btn-act-health" onclick="shareCard('Здоровье', 'health', 'status-health', 'card-health')">Опубликовать данные</button>
+                        </div>
+                        <div class="card-row" id="card-hobby">
+                            <div><div class="card-meta"><span>Хобби</span> <span class="card-status hidden" id="status-hobby">Скрыто</span></div><div id="c-hobby" class="card-body">—</div></div>
+                            <button class="btn-action" id="btn-act-hobby" onclick="shareCard('Хобби', 'hobby', 'status-hobby', 'card-hobby')">Опубликовать данные</button>
+                        </div>
+                        <div class="card-row" id="card-bag">
+                            <div><div class="card-meta"><span>Багаж</span> <span class="card-status hidden" id="status-bag">Скрыто</span></div><div id="c-bag" class="card-body">—</div></div>
+                            <button class="btn-action" id="btn-act-bag" onclick="shareCard('Багаж', 'bag', 'status-bag', 'card-bag')">Опубликовать данные</button>
+                        </div>
+                        <div class="card-row" id="card-fact">
+                            <div><div class="card-meta"><span>Факт из жизни</span> <span class="card-status hidden" id="status-fact">Скрыто</span></div><div id="c-fact" class="card-body">—</div></div>
+                            <button class="btn-action" id="btn-act-fact" onclick="shareCard('Факт из жизни', 'fact', 'status-fact', 'card-fact')">Опубликовать данные</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terminal-block card-row special-block" id="card-special">
+                    <div><div class="card-meta"><span>Особое условие</span> <span class="card-status hidden" id="status-special">Скрыто</span></div><div id="c-special" class="card-body">—</div></div>
+                    <button class="btn-action" id="btn-act-special" style="border-color: var(--danger); color: var(--danger);" onclick="shareCard('Особое условие', 'special', 'status-special', 'card-special')">Активировать протокол</button>
+                </div>
+            </div>
+
+            <div class="dash-column">
+                <div class="terminal-block log-panel">
+                    <div class="block-header">События и Чат сессии</div>
+                    <div id="log-output" class="log-output">Инициализация систем...</div>
+                    
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-message" class="chat-input" placeholder="Введите сообщение в чат..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                        <button class="btn-send" onclick="sendChatMessage()">=></button>
+                    </div>
+
+                    <div class="vote-section" id="vote-panel" style="display: none;">
+                        <div id="vote-title-text" style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: var(--danger);">Выбор кандидата на изгнание:</div>
+                        <div class="vote-buttons" id="vote-btn-group"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-screen" id="history-block">
+            <div class="history-title">📑 АРХИВНЫЙ ОТЧЕТ УБЕЖИЩА // ПРОТОКОЛ ФИНАЛА</div>
+            <div class="history-text" id="history-narrative">Генерация данных...</div>
+            <div class="history-buttons">
+                <button class="btn-terminal primary" onclick="restartSession()">Запустить новую сессию</button>
+                <button class="btn-terminal" onclick="returnToMenu()">Выйти в главное меню</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Подключение внешнего файла с базой данных -->
+<script src="cards.js"></script>
+
+<script>
+let userNickname = '';
+let currentRound = 1; 
+let activeViewUserId = 'player'; 
+let pendingSpecialAction = null; 
+let globalCatastropheTitle = '';
+
+let playersRegistry = {
+    player: { name: '', isBot: false, isDead: false, cards: {}, shared: {} }
+};
+
+const BOT_NAMES_POOL = [
+    "АЛЕКСЕЙ", "АРТЕМ", "АЛЕКСАНДР", "ДМИТРИЙ", "МАКСИМ", 
+    "ВЛАДИМИР", "ВИКТОР", "СЕРГЕЙ", "ИВАН", "НИКОЛАЙ",
+    "ЕЛЕНА", "ОЛЬГА", "ТАТЬЯНА", "МАРИЯ", "АННА", 
+    "ИРИНА", "НАТАЛЬЯ", "ЮЛИЯ", "КСЕНИЯ", "СВЕТЛАНА"
+];
+
+function getRandomElement(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function cleanCardText(text) {
+    if (!text) return '—';
+    return text.replace(/\s*\(.*?\)\s*/g, ' ').trim();
+}
+
+function toggleFullscreen() {
+    const doc = window.document;
+    const docEl = doc.documentElement;
+    const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullScreen || doc.msExitFullscreen;
+
+    if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        requestFullScreen.call(docEl);
+    } else {
+        cancelFullScreen.call(doc);
+    }
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chat-message');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const log = document.getElementById('log-output');
+    log.innerHTML += `<br><br><span style="color: #38bdf8; font-weight: bold;">[ЧАТ // ${userNickname}]:</span> ${text}`;
+    input.value = '';
+    log.scrollTop = log.scrollHeight;
+}
+
+function clearErrorState() {
+    const input = document.getElementById('player-nickname');
+    const errBox = document.getElementById('error-box');
+    input.classList.remove('input-error');
+    errBox.innerText = '';
+}
+
+function returnToMenu() {
+    document.getElementById('game-table').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'flex';
+    document.getElementById('main-game-dash').style.display = 'grid';
+    document.getElementById('main-game-dash').style.opacity = '1';
+    
+    const historyBlock = document.getElementById('history-block');
+    historyBlock.style.display = 'none';
+    historyBlock.classList.remove('visible');
+
+    playersRegistry = { player: { name: '', isBot: false, isDead: false, cards: {}, shared: {} } };
+    currentRound = 1;
+    pendingSpecialAction = null;
+    document.getElementById('player-nickname').value = '';
+}
+
+function restartSession() {
+    document.getElementById('main-game-dash').style.display = 'grid';
+    document.getElementById('main-game-dash').style.opacity = '1';
+    
+    const historyBlock = document.getElementById('history-block');
+    historyBlock.style.display = 'none';
+    historyBlock.classList.remove('visible');
+
+    currentRound = 1;
+    pendingSpecialAction = null;
+    document.getElementById('log-output').innerHTML = `====== СЕССИЯ ОПТИМИЗИРОВАНА ======<br>Позывной оператора: ${userNickname}<br>Анализ среды выполнен. Раскройте любую карту, чтобы сделать ход.`;
+    startOfflineEngine();
+}
+
+function initGameMode(mode) {
+    const input = document.getElementById('player-nickname');
+    const errBox = document.getElementById('error-box');
+    const inputNick = input.value.trim().toUpperCase();
+
+    if (!inputNick) {
+        input.classList.add('input-error');
+        errBox.innerText = 'КРИТИЧЕСКАЯ ОШИБКА: ТРЕБУЕТСЯ ИДЕНТИФИКАЦИЯ ИМЕНИ';
+        input.focus();
+        return; 
+    }
+
+    userNickname = inputNick;
+    playersRegistry.player.name = userNickname;
+
+    if (typeof BUNKER_DB === 'undefined') {
+        input.classList.add('input-error');
+        errBox.innerText = 'ОШИБКА ДОСТУПА: ФАЙЛ CARDS.JS НЕ НАЙДЕН В ПАПКЕ';
+        return;
+    }
+
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('game-table').style.display = 'flex';
+    
+    document.getElementById('log-output').innerHTML = `====== СЕССИЯ ОПТИМИЗИРОВАНА ======<br>Позывной оператора: ${userNickname}<br>Анализ среды выполнен. Раскройте любую карту, чтобы сделать ход.`;
+    
+    startOfflineEngine();
+}
+
+function startOfflineEngine() {
+    const randomCatastrophe = getRandomElement(BUNKER_DB.catastrophes);
+    globalCatastropheTitle = randomCatastrophe.title.toUpperCase();
+    document.getElementById('view-catastrophe').innerHTML = `<strong>${globalCatastropheTitle}</strong><br>${randomCatastrophe.desc}`;
+    document.getElementById('view-bunker').innerText = getRandomElement(BUNKER_DB.bunker);
+    document.getElementById('view-threat').innerText = getRandomElement(BUNKER_DB.threats);
+
+    playersRegistry.player.cards = {
+        prof: cleanCardText(getRandomElement(BUNKER_DB.professions)),
+        bio: cleanCardText(getRandomElement(BUNKER_DB.biology)),
+        health: cleanCardText(getRandomElement(BUNKER_DB.health)),
+        hobby: cleanCardText(getRandomElement(BUNKER_DB.hobbies)),
+        bag: cleanCardText(getRandomElement(BUNKER_DB.baggage)),
+        fact: cleanCardText(getRandomElement(BUNKER_DB.facts)),
+        special: ""
+    };
+    
+    const specialPool = [
+        "Карта-бланш: Заставьте любого игрока прямо сейчас открыть карту Здоровья.",
+        "Карта-бланш: Вы можете скопировать Багаж любого выбранного игрока себе.",
+        "Карта-бланш: Поменяйтесь профессией с любым игроком на выбор.",
+        "Карта-бланш: Аннулируйте любое голосование против вас в текущем раунде."
+    ];
+    playersRegistry.player.cards.special = getRandomElement(specialPool);
+
+    ['prof', 'bio', 'health', 'hobby', 'bag', 'fact', 'special'].forEach(cat => {
+        playersRegistry.player.shared[cat] = false;
+    });
+
+    let shuffeledNames = [...BOT_NAMES_POOL].sort(() => 0.5 - Math.random());
+    
+    for (let index = 0; index < 5; index++) {
+        const botId = `bot_${index + 1}`;
+        playersRegistry[botId] = {
+            name: `${shuffeledNames[index]} (ИИ)`,
+            isBot: true,
+            isDead: false,
+            cards: {
+                prof: cleanCardText(getRandomElement(BUNKER_DB.professions)),
+                bio: cleanCardText(getRandomElement(BUNKER_DB.biology)),
+                health: cleanCardText(getRandomElement(BUNKER_DB.health)),
+                hobby: cleanCardText(getRandomElement(BUNKER_DB.hobbies)),
+                bag: cleanCardText(getRandomElement(BUNKER_DB.baggage)),
+                fact: cleanCardText(getRandomElement(BUNKER_DB.facts)),
+                special: "Карта-бланш: Тайное убежище. Защитный протокол активен."
+            },
+            shared: { prof: false, bio: false, health: false, hobby: false, bag: false, fact: false, special: false }
+        };
+    }
+
+    renderTabsMenu();
+    switchUserView('player');
+    startDiscussionRound();
+}
+
+function renderTabsMenu() {
+    const tabsList = document.getElementById('tabs-list');
+    tabsList.innerHTML = '';
+
+    Object.keys(playersRegistry).forEach(id => {
+        const p = playersRegistry[id];
+        const btn = document.createElement('button');
+        btn.className = `nav-tab ${id === activeViewUserId ? 'active' : ''} ${p.isDead ? 'dead' : ''}`;
+        btn.innerText = p.name;
+        btn.setAttribute('onclick', `switchUserView('${id}')`);
+        tabsList.appendChild(btn);
+    });
+}
+
+function startDiscussionRound() {
+    const log = document.getElementById('log-output');
+    let alivePlayers = Object.keys(playersRegistry).filter(id => !playersRegistry[id].isDead);
+    
+    if (alivePlayers.length <= 3) {
+        generateEndgameStory(alivePlayers);
+        return;
+    }
+
+    log.innerHTML += `<br><br><span style="color: #f59e0b; font-weight: bold;">📜 НАЧАЛО РАУНДА №${currentRound}</span>`;
+    log.innerHTML += `<br><span style="color: #8892b0; font-size: 12px;">Статус систем: Мест в бункере: 3. Текущее число живых претендентов: ${alivePlayers.length}.</span>`;
+    
+    if (playersRegistry.player.isDead) {
+        log.innerHTML += `<br><span style="color: #8892b0; font-style: italic;">Игрок исключен. Включен автономный протокол ИИ. Боты начинают ходы через 4 секунды...</span>`;
+        log.scrollTop = log.scrollHeight;
+        
+        document.getElementById('vote-panel').style.display = 'none';
+        setTimeout(() => { executeBotChain(1); }, 4000);
+    } else {
+        log.innerHTML += `<br>Задача: Опубликуйте любую вашу закрытую карту для продвижения по фазе обсуждения.`;
+        log.scrollTop = log.scrollHeight;
+    }
+}
+
+function shareCard(label, catKey, statusId, cardId) {
+    if (playersRegistry.player.isDead) return;
+    if (playersRegistry.player.shared[catKey]) return;
+
+    const log = document.getElementById('log-output');
+
+    if (catKey === 'special') {
+        playersRegistry.player.shared[catKey] = true;
+        const cardText = playersRegistry.player.cards[catKey];
+        log.innerHTML += `<br><br><span style="color: #ef4444; font-weight: bold;">🔥 [${userNickname}] АКТИВИРУЕТ ОСОБОЕ УСЛОВИЕ:</span><br>“${cardText}”`;
+        
+        if (cardText.includes("открыть карту Здоровья")) {
+            pendingSpecialAction = "reveal_health";
+            openSpecialTargetSelector("ВЫБЕРИТЕ ЦЕЛЬ ДЛЯ ВСКРЫТИЯ ЗДОРОВЬЯ:");
+        } else if (cardText.includes("скопировать Багаж")) {
+            pendingSpecialAction = "copy_baggage";
+            openSpecialTargetSelector("ВЫБЕРИТЕ ЦЕЛЬ ДЛЯ КОПИРОВАНИЯ БАГАЖА:");
+        } else if (cardText.includes("Поменяйтесь профессией")) {
+            pendingSpecialAction = "swap_profession";
+            openSpecialTargetSelector("ВЫБЕРИТЕ ЦЕЛЬ ДЛЯ ОБМЕНА ПРОФЕССИЕЙ:");
+        } else if (cardText.includes("Аннулируйте любое голосование")) {
+            pendingSpecialAction = "cancel_votes";
+            log.innerHTML += `<br><span style="color: #10b981;">[ПРОТОКОЛ АКТИВИРОВАН]: Все голоса против вас в этом раунде будут принудительно списаны!</span>`;
+        }
+        
+        switchUserView(activeViewUserId);
+        log.scrollTop = log.scrollHeight;
+        return;
+    }
+
+    playersRegistry.player.shared[catKey] = true;
+    const cardText = playersRegistry.player.cards[catKey];
+    log.innerHTML += `<br><br><span style="color: #fff; font-weight: bold;">[${userNickname}] раскрывает карту ${label.toUpperCase()}:</span><br>“${cardText}”`;
+    
+    switchUserView(activeViewUserId);
+    log.scrollTop = log.scrollHeight;
+
+    disableAllActions(true);
+    setTimeout(() => { executeBotChain(1); }, 1500);
+}
+
+function openSpecialTargetSelector(titleText) {
+    const votePanel = document.getElementById('vote-panel');
+    const voteTitle = document.getElementById('vote-title-text');
+    const voteGroup = document.getElementById('vote-btn-group');
+    
+    voteTitle.innerText = titleText;
+    voteGroup.innerHTML = '';
+
+    let aliveBots = Object.keys(playersRegistry).filter(id => id !== 'player' && !playersRegistry[id].isDead);
+    
+    aliveBots.forEach(id => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-vote';
+        btn.style.borderColor = 'var(--accent)';
+        btn.innerText = playersRegistry[id].name;
+        btn.setAttribute('onclick', `executeSpecialAction('${id}')`);
+        voteGroup.appendChild(btn);
+    });
+    
+    votePanel.style.display = 'block';
+    document.getElementById('log-output').scrollTop = document.getElementById('log-output').scrollHeight;
+}
+
+function executeSpecialAction(targetBotId) {
+    const log = document.getElementById('log-output');
+    const targetBot = playersRegistry[targetBotId];
+    document.getElementById('vote-panel').style.display = 'none';
+
+    if (pendingSpecialAction === "reveal_health") {
+        targetBot.shared.health = true; 
+        log.innerHTML += `<br><br><span style="color: #10b981; font-weight: bold;">💥 ЭФФЕКТ КАРТЫ: Под давлением систем [${targetBot.name}] раскрывает карту ЗДОРОВЬЕ:</span><br>“${targetBot.cards.health}”`;
+    } 
+    else if (pendingSpecialAction === "copy_baggage") {
+        playersRegistry.player.cards.bag = targetBot.cards.bag; 
+        playersRegistry.player.shared.bag = true; 
+        log.innerHTML += `<br><br><span style="color: #10b981; font-weight: bold;">💥 ЭФФЕКТ КАРТЫ: Вы успешно скопировали ресурсы! Ваш новый БАГАЖ:</span><br>“${playersRegistry.player.cards.bag}”`;
+    } 
+    else if (pendingSpecialAction === "swap_profession") {
+        let tempProf = playersRegistry.player.cards.prof;
+        playersRegistry.player.cards.prof = targetBot.cards.prof;
+        targetBot.cards.prof = tempProf;
+        
+        log.innerHTML += `<br><br><span style="color: #10b981; font-weight: bold;">💥 ЭФФЕКТ КАРТЫ: Произошла принудительная рокировка! Ваша новая ПРОФЕССИЯ:</span><br>“${playersRegistry.player.cards.prof}”`;
+        log.innerHTML += `<br><span style="color: #f59e0b;">Новая ПРОФЕССИЯ [${targetBot.name}]:</span> “${targetBot.cards.prof}”`;
+    }
+
+    pendingSpecialAction = null;
+    switchUserView(activeViewUserId);
+    log.scrollTop = log.scrollHeight;
+}
+
+function disableAllActions(status) {
+    const buttons = document.querySelectorAll('.btn-action');
+    buttons.forEach(btn => btn.disabled = status);
+}
+
+function getBotRandomUnsharedCategory(bot) {
+    const availableCategories = [];
+    const translation = { prof: "Профессия", bio: "Биология", health: "Здоровье", hobby: "Хобби", bag: "Багаж", fact: "Факт из жизни" };
+    
+    Object.keys(bot.shared).forEach(key => {
+        if (key !== 'special' && !bot.shared[key]) { 
+            availableCategories.push({ key: key, label: translation[key] });
+        }
+    });
+
+    if (availableCategories.length === 0) return null;
+    return getRandomElement(availableCategories);
+}
+
+function executeBotChain(botIndex) {
+    const log = document.getElementById('log-output');
+    const botId = `bot_${botIndex}`;
+
+    if (botIndex > 5) {
+        disableAllActions(false);
+        if (currentRound >= 2) {
+            if (playersRegistry.player.isDead) {
+                log.innerHTML += `<br><br><span style="color: #ef4444; font-weight: bold;">💥 ГОЛОСОВАНИЕ: Все боты сделали ходы. Запуск автоматического подсчета бюллетеней...</span>`;
+                log.scrollTop = log.scrollHeight;
+                setTimeout(() => { processVoteResult(null); }, 3000);
+            } else {
+                openVotePanel();
+            }
+        } else {
+            log.innerHTML += `<br><br><span style="color: #10b981; font-weight: bold;">⚡ СИСТЕМА: Раунд 1 завершен без исключений. Переход ко второму этапу.</span>`;
+            currentRound++;
+            log.scrollTop = log.scrollHeight;
+            setTimeout(() => { startDiscussionRound(); }, 2000);
+        }
+        return;
+    }
+
+    const currentBot = playersRegistry[botId];
+
+    if (!currentBot || currentBot.isDead) {
+        executeBotChain(botIndex + 1);
+        return;
+    }
+
+    const choice = getBotRandomUnsharedCategory(currentBot);
+
+    if (choice) {
+        currentBot.shared[choice.key] = true;
+        const botCardText = currentBot.cards[choice.key];
+        log.innerHTML += `<br><br><span style="color: #f59e0b; font-weight: bold;">[${currentBot.name}] вскрывает карту ${choice.label.toUpperCase()}:</span><br>“${botCardText}”.`;
+    } else {
+        log.innerHTML += `<br><br><span style="color: #8892b0; font-style: italic;">[${currentBot.name}] пропускает ход.</span>`;
+    }
+    
+    log.scrollTop = log.scrollHeight;
+    setTimeout(() => { executeBotChain(botIndex + 1); }, 3500);
+}
+
+function openVotePanel() {
+    const log = document.getElementById('log-output');
+    const votePanel = document.getElementById('vote-panel');
+    const voteTitle = document.getElementById('vote-title-text');
+    const voteGroup = document.getElementById('vote-btn-group');
+    
+    voteTitle.innerText = "ВЫБОР КАНДИДАТА НА ИЗГНАНИЕ:";
+    voteGroup.innerHTML = '';
+
+    let aliveBots = Object.keys(playersRegistry).filter(id => id !== 'player' && !playersRegistry[id].isDead);
+
+    aliveBots.forEach(id => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-vote';
+        btn.innerText = playersRegistry[id].name;
+        btn.setAttribute('onclick', `processVoteResult('${id}')`);
+        voteGroup.appendChild(btn);
+    });
+
+    log.innerHTML += `<br><br><span style="color: #ef4444; font-weight: bold;">💥 СИСТЕМА: Запуск голосования раунда №${currentRound}. Ожидание финализации выбора.</span>`;
+    votePanel.style.display = 'block';
+    log.scrollTop = log.scrollHeight;
+}
+
+function processVoteResult(playerVotedId) {
+    const log = document.getElementById('log-output');
+    document.getElementById('vote-panel').style.display = 'none';
+    
+    let alivePlayers = Object.keys(playersRegistry).filter(id => !playersRegistry[id].isDead);
+    let votesCounter = {};
+    alivePlayers.forEach(id => votesCounter[id] = 0);
+
+    alivePlayers.forEach(id => {
+        if (playersRegistry[id].isBot && !playersRegistry[id].shared.special && Math.random() < 0.2) {
+            playersRegistry[id].shared.special = true;
+            log.innerHTML += `<br><br><span style="color: #dc2626; font-weight: bold;">🔥 ТРЕВОГА // [${playersRegistry[id].name}] АКТИВИРУЕТ ОСОБОЕ УСЛОВИЕ:</span><br>“${playersRegistry[id].cards.special}”`;
+        }
+    });
+
+    if (playerVotedId) votesCounter[playerVotedId]++;
+
+    alivePlayers.forEach(id => {
+        if (playersRegistry[id].isBot) {
+            let possibleTargets = alivePlayers.filter(tId => tId !== id);
+            let botChoice = getRandomElement(possibleTargets);
+            votesCounter[botChoice]++;
+        }
+    });
+
+    if (playersRegistry.player.shared.special && playersRegistry.player.cards.special.includes("Аннулируйте любое голосование")) {
+        log.innerHTML += `<br><br><span style="color: #10b981; font-weight: bold;">🛡️ ЭФФЕКТ КАРТЫ АКТИВИРОВАН: Все ${votesCounter['player']} голосов против [${userNickname}] аннулированы системой защиты!</span>`;
+        votesCounter['player'] = 0; 
+    }
+
+    log.innerHTML += `<br><br><span style="color: #9ca3af; font-weight: bold;">📊 ИТОГИ ГОЛОСОВАНИЯ ПО СЕКТОРУ (РАУНД ${currentRound}):</span>`;
+    Object.keys(votesCounter).forEach(id => {
+        log.innerHTML += `<br>- [${playersRegistry[id].name}]: получено голосов: ${votesCounter[id]}`;
+    });
+
+    let maxVotes = -1;
+    let leaders = [];
+
+    Object.keys(votesCounter).forEach(id => {
+        if (votesCounter[id] > maxVotes) {
+            maxVotes = votesCounter[id];
+            leaders = [id];
+        } else if (votesCounter[id] === maxVotes) {
+            leaders.push(id);
+        }
+    });
+
+    if (leaders.length > 1) {
+        log.innerHTML += `<br><br><span style="color: #e59e0b; font-weight: bold;">⚖️ ВТОРОЙ ТУР ТРИБУНАЛА: Равенство сил между кандидатами. Боты проводят экстренное переголосование среди лидеров...</span>`;
+        let finalExpelledId = getRandomElement(leaders);
+        playersRegistry[finalExpelledId].isDead = true;
+        log.innerHTML += `<br><span style="color: #ef4444; font-weight: bold;">❌ ИСХОД: Перевес зафиксирован. Субъект [${playersRegistry[finalExpelledId].name}] покидает периметр.</span>`;
+        checkPlayerDeath(finalExpelledId);
+    } else {
+        let expelledId = leaders;
+        playersRegistry[expelledId].isDead = true;
+        log.innerHTML += `<br><br><span style="color: #ef4444; font-weight: bold;">❌ ИСХОД ГОЛОСОВАНИЯ: Субъект [${playersRegistry[expelledId].name}] исключен из бункера!</span>`;
+        checkPlayerDeath(expelledId);
+    }
+
+    currentRound++;
+    renderTabsMenu();
+    switchUserView(activeViewUserId);
+    log.scrollTop = log.scrollHeight;
+
+    setTimeout(() => {
+        startDiscussionRound();
+    }, 4000);
+}
+
+function checkPlayerDeath(expelledId) {
+    const log = document.getElementById('log-output');
+    if (expelledId === 'player') {
+        log.innerHTML += `<br><br><span style="color: #ef4444; font-weight: bold;">🛑 СИСТЕМНЫЙ КРАХ: Вы погибли на поверхности. Выживание провалено.</span>`;
+        log.innerHTML += `<br><span style="color: #10b981; font-weight: bold;">🔓 ИНФОРМАЦИЯ: Раскрытие вашей личности выжившим...</span>`;
+        
+        ['prof', 'bio', 'health', 'hobby', 'bag', 'fact', 'special'].forEach(cat => {
+            if (!playersRegistry.player.shared[cat]) {
+                playersRegistry.player.shared[cat] = true;
+            }
+        });
+        log.innerHTML += `<br>- Полное досье оператора сохранено в архиве систем.`;
+    }
+}
+
+// ИСПРАВЛЕНО: Кинематографичный генератор летописи финала с плавным угасанием
+function generateEndgameStory(survivorsIds) {
+    const dash = document.getElementById('main-game-dash');
+    const historyBlock = document.getElementById('history-block');
+    const narrativeBox = document.getElementById('history-narrative');
+    
+    // 1. Плавно гасим основной игровой стол
+    dash.style.opacity = '0';
+
+    // 2. Через 1 секунду переключаем блоки и мягко проявляем отчет финала
+    setTimeout(() => {
+        dash.style.display = 'none';
+        historyBlock.style.display = 'flex';
+        
+        // Форсируем перерисовку браузера перед добавлением класса видимости
+        void historyBlock.offsetWidth;
+        historyBlock.classList.add('visible');
+    }, 1000);
+
+    let details = survivorsIds.map(id => {
+        let p = playersRegistry[id];
+        return {
+            name: p.name,
+            prof: p.cards.prof.toLowerCase(),
+            health: p.cards.health.toLowerCase(),
+            bag: p.cards.bag.toLowerCase()
+        };
+    });
+
+    let deadNames = Object.keys(playersRegistry)
+        .filter(id => playersRegistry[id].isDead)
+        .map(id => playersRegistry[id].name);
+
+    let text = `Гермодверь запечатана. Датчики зафиксировали критическое падение давления на поверхности.\n`;
+    text += `Катастрофа [${globalCatastropheTitle}] поглотила остатки человечества.\n\n`;
+    
+    if (deadNames.length > 0) {
+        text += `Снаружи, в радиоактивной пыли и хаосе, навечно остались: ${deadNames.join(', ')}.\n`;
+        text += `Их личные дела стерты из активных протоколов жизнеобеспечения.\n\n`;
+    }
+
+    text += `Внутри убежища остались трое: ${details.map(d => d.name).join(', ')}.\n`;
+    text += `Им доверено будущее цивилизации. Но сухие цифры характеристик предрекали разный исход...\n\n`;
+
+    let hasDoctor = details.some(d => d.prof.includes('врач') || d.prof.includes('хирург') || d.prof.includes('фармацевт'));
+    let hasEngineer = details.some(d => d.prof.includes('инженер') || d.prof.includes('слесарь') || d.prof.includes('электрик') || d.prof.includes('сварщик'));
+    let hasFarmer = details.some(d => d.prof.includes('фермер') || d.prof.includes('агроном') || d.prof.includes('пчеловод'));
+    
+    let hasWeapons = details.some(d => d.bag.includes('ружье') || d.bag.includes('нож') || d.bag.includes('инструмент'));
+    let hasMeds = details.some(d => d.bag.includes('аптечка') || d.bag.includes('инструментов'));
+    let hasSeeds = details.some(d => d.bag.includes('семена'));
+
+    text += `--- АНАЛИЗ ИНФРАСТРУКТУРЫ И НАВЫКОВ ---\n`;
+
+    if (hasDoctor) {
+        text += `- Наличие медицинского специалиста позволило купировать внутренние травмы. `;
+    } else {
+        text += `- Отсутствие квалифицированных врачей сделало каждую царапину смертельной. `;
+    }
+
+    let sickCount = details.filter(d => !d.health.includes('абсолютно здоров') && !d.health.includes('близорукость')).length;
+    if (sickCount > 1) {
+        text += `Хронические недуги команды обострились в замкнутом пространстве. Спасали только остатки медикаментов.\n`;
+    } else {
+        text += `Крепкий иммунитет выживших защитил их от внутренних вспышек инфекций.\n`;
+    }
+
+    if (hasEngineer) {
+        text += `- Технические специалисты смогли поддерживать системы вентиляции и фильтрации воды в рабочем состоянии.`;
+    } else {
+        text += `- Без инженеров сложные узлы бункера начали медленно деградировать. Генератор постоянно сбоил, погружая отсек во тьму.`;
+    }
+    
+    if (details.some(d => d.bag.includes('бензин') || d.bag.includes('рация'))) {
+        text += ` Взятые с собой технические припасы дали колоссальное преимущество в первые годы.\n\n`;
+    } else {
+        text += ` Отсутствие базовых инструментов усугубляло любую мелкую поломку.\n\n`;
+    }
+
+    text += `--- ИТОГОВЫЙ СЦЕНАРИЙ ВЫЖИВАНИЯ ---\n`;
+    
+    let survivalScore = 0;
+    if (hasDoctor) survivalScore++;
+    if (hasEngineer) survivalScore++;
+    if (hasFarmer || hasSeeds) survivalScore++;
+    if (hasWeapons) survivalScore++;
+
+    if (survivalScore >= 3) {
+        text += `Они выстояли. Сбалансированный состав команды и прагматичный выбор позволили преодолеть изоляцию.\n`;
+        text += `Через положенный срок гермодверь открылась. Появились первые всходы на отравленной почве.\n`;
+        text += `СТАТУС: ЦИВИЛИЗАЦИЯ БУДЕТ ВОССТАНОВЛЕНА. ПОБЕДА КОМАНДЫ.`;
+    } else if (survivalScore === 2) {
+        text += `Это было медленное угасание. Им отчаянно не хватало рабочих рук. Пока одни чинили проводку, другие гибли от инфекций.\n`;
+        text += `Ресурсы подошли к концу раньше, чем очистилась атмосфера. Последний выживший отключил фильтры вручную.\n`;
+        text += `СТАТУС: МИССИЯ ПРОВАЛЕНА. СТАНЦИЯ ОБЕСТОЧЕНА.`;
+    } else {
+        text += `Катастрофа внутри бункера наступила быстрее, чем снаружи. Из-за отсутствия критически важных навыков вспыхнули внутренние конфликты.\n`;
+        text += `Неисправность фильтров воздуха привела к удушью в течение первых шести месяцев.\n`;
+        text += `СТАТУС: СУБЪЕКТЫ ЛИКВИДИРОВАНЫ. ПРИЧИНА: СИСТЕМНЫЙ КОЛЛАПС.`;
+    }
+
+    narrativeBox.innerText = text;
+}
+
+function switchUserView(userId) {
+    activeViewUserId = userId;
+    renderTabsMenu();
+
+    const targetUser = playersRegistry[userId];
+    document.getElementById('player-block-header').innerText = `ДОСЬЕ // СУБЪЕКТ: ${targetUser.name} ${targetUser.isDead ? '[ИЗГНАН]' : ''}`;
+
+    const categories = ['prof', 'bio', 'health', 'hobby', 'bag', 'fact'];
+    categories.forEach(cat => {
+        const bodyEl = document.getElementById(`c-${cat}`);
+        const statusEl = document.getElementById(`status-${cat}`);
+        const actionBtn = document.getElementById(`btn-act-${cat}`);
+        const boxEl = document.getElementById(`card-${cat}`);
+
+        boxEl.classList.remove('is-shared');
+
+        if (userId === 'player') {
+            bodyEl.innerText = targetUser.cards[cat];
+            bodyEl.classList.remove('blur-text');
+            
+            if (targetUser.shared[cat]) {
+                statusEl.innerText = "Раскрыто";
+                statusEl.className = "card-status shared";
+                actionBtn.style.display = 'none';
+                boxEl.classList.add('is-shared');
+            } else {
+                statusEl.innerText = "Скрыто";
+                statusEl.className = "card-status hidden";
+                actionBtn.style.display = targetUser.isDead ? 'none' : 'block';
+            }
+        } else {
+            actionBtn.style.display = 'none';
+                        if (targetUser.shared[cat]) {
+                bodyEl.innerText = targetUser.cards[cat];
+                bodyEl.classList.remove('blur-text');
+                statusEl.innerText = "Раскрыто";
+                statusEl.className = "card-status shared";
+                boxEl.classList.add('is-shared');
+            } else {
+                bodyEl.innerText = "ДАННЫЕ СКРЫТЫ // ПРОТОКОЛ ЗАБЛОКИРОВАН";
+                bodyEl.classList.add('blur-text');
+                statusEl.innerText = "Скрыто";
+                statusEl.className = "card-status hidden";
+            }
+        }
+    });
+
+    const specialBlock = document.getElementById('card-special');
+    specialBlock.classList.remove('is-shared');
+    
+    document.getElementById('c-special').innerText = targetUser.cards.special;
+    const specStatus = document.getElementById('status-special');
+    
+    if (userId === 'player') {
+        if (targetUser.shared.special) {
+            specStatus.innerText = "Активировано";
+            specStatus.className = "card-status shared";
+            document.getElementById('btn-act-special').style.display = 'none';
+            specialBlock.classList.add('is-shared');
+        } else {
+            specStatus.innerText = "Скрыто";
+            specStatus.className = "card-status hidden";
+            document.getElementById('btn-act-special').style.display = targetUser.isDead ? 'none' : 'block';
+        }
+        document.getElementById('c-special').classList.remove('blur-text');
+    } else {
+        document.getElementById('btn-act-special').style.display = 'none';
+        if (targetUser.shared.special) {
+            specStatus.innerText = "Активировано";
+            specStatus.className = "card-status shared";
+            document.getElementById('c-special').classList.remove('blur-text');
+            specialBlock.classList.add('is-shared');
+        } else {
+            specStatus.innerText = "Скрыто";
+            specStatus.className = "card-status hidden";
+            document.getElementById('c-special').innerText = "ПРОТОКОЛ КАРТЫ-БЛАНШ ЗАБЛОКИРОВАН";
+            document.getElementById('c-special').classList.add('blur-text');
+        }
+    }
+}
+</script>
+</body>
+</html>
+
+            
