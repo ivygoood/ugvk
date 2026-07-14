@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <title>Уличные Гонки: Ночной Заезд</title>
     <script src="https://unpkg.com"></script>
-    <script>
-      vkBridge.send("VKWebAppInit"); // Обязательная инициализация игры в ВК
-    </script>
     <style>
         html, body {
             margin: 0;
@@ -812,21 +809,46 @@
                 .then(() => {
                     console.log('=== VK BRIDGE УСПЕШНО ИНИЦИАЛИЗИРОВАН ===');
             
-                    // Показываем полноэкранную рекламу ПРИ ВХОДЕ (аналог showFullscreenAdv)
-                    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
-                        .then((data) => {
-                            console.log('Стартовая реклама VK показана:', data.result);
-                        })
-                        .catch((error) => {
-                            console.log('Ошибка или пропуск стартовой рекламы VK:', error);
-                        });
+                    // Запускаем саму игру (функция, которая стартует ваше меню/геймплей)
+                    startGame(); 
+
+                    // Пытаемся показать рекламу параллельно, не блокируя вход в игру
+                    showStartAds();
                 })
                 .catch((error) => {
                     console.error('Критическая ошибка инициализации VK:', error);
+                    // Если ВК не ответил, всё равно запускаем игру (для тестов на локалке)
+                    startGame(); 
                 });
         } else {
             console.error('Библиотека vkBridge не найдена! Проверьте index.html');
+            // Если скрипт вообще не загрузился (например, нет интернета), запускаем локально
+            startGame(); 
         }
+
+        // Функция для показа стартовой рекламы
+        function showStartAds() {
+            // Для рекламы во время загрузки игры лучше использовать формат 'preloader'
+            vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'preloader' })
+                .then((data) => {
+                    if (data.result) {
+                        console.log('Стартовая реклама VK успешно показана');
+                    } else {
+                        console.log('Реклама не показана (нет доступных объявлений)');
+                    }
+                })
+                .catch((error) => {
+                    // Сюда будет прилетать ошибка, если у пользователя стоит AdBlock
+                    console.log('Показ стартовой рекламы отклонен или заблокирован:', error.message || error);
+                });
+        }
+
+        // Заглушка вашей функции запуска игры
+        function startGame() {
+            console.log('Игра запускается...');
+            // Здесь код инициализации вашей игры (отрисовка меню, подключение движка и т.д.)
+        }
+
 
 
         window.addEventListener('keydown', function(e) {
