@@ -857,26 +857,16 @@
         function startGame() {
             console.log('=== ЗАПУСК ДВИЖКА ИГРЫ УЛИЧНЫЕ ГОНКИ ===');
     
-            // 1. Активируем холст игры
-            const canvas = document.getElementById("gameCanvas") || document.querySelector("canvas");
-            if (canvas) {
-                canvas.style.display = "block"; // Показываем скрытый canvas игроку
-            }
-
-            // 2. Вызываем главную функцию вашей игры
-            // В вашем коде гонок стартовая точка называется game() или initGame()
-            if (typeof game === 'function') {
-                game(); 
-            } else if (typeof initGame === 'function') {
-                initGame();
-            } else if (typeof start === 'function') {
-                start();
+            // Вызываем вашу родную функцию игры, которая убирает загрузчик и открывает Гараж
+            if (typeof hideLoader === 'function') {
+                hideLoader();
             } else {
-                // Если код гонок написан сплошным текстом без главной функции,
-                // убедитесь, что вы не обернули его в startGame, и он запустится сам.
-                console.log('Игровые скрипты гонок активны');
+                // Если функция почему-то не дождалась загрузки, пробуем открыть Гараж напрямую
+                if (typeof showScreen === 'function') showScreen('garage');
+                if (typeof updateUI === 'function') updateUI();
             }
         }
+
 
         window.addEventListener('keydown', function(e) {
             // Блокируем: Пробел, Стрелки (вверх, вниз, влево, вправо), PageUp, PageDown, End, Home
