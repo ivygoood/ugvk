@@ -5,6 +5,30 @@
     <title>Уличные Гонки: Ночной Заезд</title>
     <script src="./vk-bridge.js"></script>
     <style>
+        
+        
+        /* Убираем все отступы у страницы */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            height: 100% !important;
+            overflow: hidden;
+            background-color: #000; /* Черный фон вместо белого экрана */
+        }
+
+        /* Находим ваш тег canvas и жестко растягиваем его */
+        canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+
+        
         html, body {
             margin: 0;
             padding: 0;
