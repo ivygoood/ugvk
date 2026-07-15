@@ -3,32 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Уличные Гонки: Ночной Заезд</title>
-    <script src="./vk-bridge.js"></script>
+    <script src="https://unpkg.com"></script>
     <style>
-        
-        
-        /* Убираем все отступы у страницы */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100% !important;
-            height: 100% !important;
-            overflow: hidden;
-            background-color: #000; /* Черный фон вместо белого экрана */
-        }
-
-        /* Находим ваш тег canvas и жестко растягиваем его */
-        canvas {
-            display: block;
-            width: 100% !important;
-            height: 100% !important;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-
-        
         html, body {
             margin: 0;
             padding: 0;
@@ -57,12 +33,6 @@
             position: absolute; left: 50%; transform: translateX(-50%); 
             filter: drop-shadow(0 15px 10px rgba(0,0,0,0.6)); transition: width 0.3s, bottom 0.3s, filter 0.2s; 
         }
-
-        /* Принудительно включаем гараж, если JS не успел сработать */
-        #screen-garage {
-            display: block !important;
-        }
-
 
         .arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,0,0,0.7); color: white; border: none; font-size: 40px; padding: 10px 20px; cursor: pointer; z-index: 10; border-radius: 5px; }
         .arrow-left { left: -60px; } .arrow-right { right: -60px; }
@@ -401,51 +371,6 @@
             }
         }
 
-        /* Железобетонная защита для модерации Яндекс Игр */
-        @media (max-height: 826px) {
-    
-            /* 1. Полностью ликвидируем баннер Яндекса на низких экранах */
-            div[id*="yandex_rtb"], 
-            div[class*="yandex-rtb"], 
-            [id^="yandex_rtb_"],
-            iframe[src*="an.yandex.ru"],
-            div[style*="position: fixed; bottom: 0"] {
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-            }
-
-            /* 2. Если экран критически низкий, мы аккуратно уменьшаем размер всей нижней панели */
-            /* Это гарантирует, что кнопки и статистика УМЕНЬШАТСЯ и ВЛЕЗУТ в экран, а не уплывут вниз */
-            .sell-car-block, 
-            [class*="prodati"], 
-            [class*="stats"], 
-            [id*="stats"], 
-            [class*="button"] {
-                position: relative !important;
-                bottom: auto !important;
-                margin-top: 10px !important;
-        
-                /* Уменьшаем масштаб кнопок и статистики на 20%, чтобы они гарантированно влезли */
-                transform: scale(0.8) !important;
-                transform-origin: top center !important;
-            }
-        }
-
-        /* ======================================================== */
-        /* 1. БЛОКИРОВКА РЕКЛАМЫ ЯНДЕКСА НА МАЛЕНЬКИХ ЭКРАНАХ       */
-        /* ======================================================== */
-        @media (max-height: 850px) {
-            div[id*="yandex_rtb"], 
-            div[class*="yandex-rtb"], 
-            [id^="yandex_rtb_"],
-            iframe[src*="an.yandex.ru"],
-            div[style*="position: fixed; bottom: 0"] {
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-            }
-        }
 
         /* ======================================================== */
         /* 2. НАСТРОЙКА БОЛЬШИХ ОТСТУПОВ СНИЗУ (БУФЕР)              */
@@ -833,85 +758,33 @@
     </div>
 
     <script>
-        // ИНИЦИАЛИЗАЦИЯ SDK ВКОНТАКТЕ (VK BRIDGE)
-        if (typeof vkBridge !== 'undefined') {
-            vkBridge.send('VKWebAppInit');
-            console.log('=== VK BRIDGE УСПЕШНО ИНИЦИАЛИЗИРОВАН ===');
+        var vkBridge;
 
-            // СНАЧАЛА запускаем рекламу. 
-            // Она сама вызовет startGame(), когда закроется или если выдаст ошибку!
-            showStartAds(); 
+        // ИНИЦИАЛИЗАЦИЯ SDK ВКОНТАКТЕ
+        if (typeof window.vkBridge !== 'undefined') {
+            vkBridge = window.vkBridge;
     
+            vkBridge.send('VKWebAppInit')
+                .then((data) => {
+                    if (data.result) {
+                        console.log('=== VK Bridge успешно инициализирован ===');
+                
+                        // Показываем межстраничную рекламу ПРИ ВХОДЕ
+                        vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
+                            .then((adData) => {
+                                console.log('Реклама при входе обработана:', adData);
+                            })
+                            .catch((error) => {
+                                console.log('Ошибка показа рекламы при входе:', error);
+                            });
+                    }
+                })
+                .catch((error) => {
+                    console.log('Ошибка инициализации VK Bridge:', error);
+                });
         } else {
-            console.error('Библиотека vkBridge не найдена! Проверьте index.html');
-            // Если скрипт не в ВК, запускаем игру сразу
-            startGame(); 
+            console.log('VK Bridge не найден (возможно, локальный запуск)');
         }
-
-
-        // Функция для показа стартовой рекламы
-        function showStartAds() {
-            console.log('Запрос на показ стартовой рекламы VK отправлен');
-    
-            if (typeof vkBridge !== 'undefined') {
-                // Используем более стабильный формат 'interstitial' (всплывающее окно)
-                // И обязательно добавляем отслеживание результата через .then() и .catch()
-                vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
-                    .then((data) => {
-                        console.log('Реклама успешно показана или закрыта', data);
-                        // ЗДЕСЬ вызывайте функцию старта вашей игры (например, startGame())
-                    })
-                    .catch((error) => {
-                        console.error('Ошибка рекламы или её некуда вставить:', error);
-                        // ЕСЛИ РЕКЛАМА СЛОМАЛАСЬ, ВСЕ РАВНО ЗАПУСКАЕМ ИГРУ:
-                        // ЗДЕСЬ вызывайте функцию старта вашей игры (например, startGame())
-                    });
-            }
-        }
-
-
-        // Функция для показа стартовой рекламы
-        function showStartAds() {
-            console.log('Запрос на показ стартовой рекламы VK отправлен');
-    
-            if (typeof vkBridge !== 'undefined') {
-                // Запускаем рекламу и сохраняем результат в переменную
-                var adPromise = vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
-        
-                // Проверяем, поддерживает ли vkBridge на ПК современный синтаксис .then()
-                if (adPromise && typeof adPromise.then === 'function') {
-                    adPromise
-                        .then(function(data) {
-                            console.log('Реклама успешно пройдена');
-                            startGame();
-                        })
-                        .catch(function(error) {
-                            console.error('Ошибка рекламы в ВК, запускаем игру:', error);
-                            startGame();
-                        });
-                } else {
-                    // Если мы на ПК и .then() не поддерживается — просто сразу запускаем игру
-                    console.log('Локальный запуск на ПК, пропускаем ожидание рекламы');
-                    startGame();
-                }
-            } else {
-                startGame();
-            }
-        }
-
-
-        // 2. Ваша функция запуска (её код полностью правильный)
-        function startGame() {
-            console.log('=== ЗАПУСК ДВИЖКА ИГРЫ УЛИЧНЫЕ ГОНКИ ===');
-
-            if (typeof hideLoader === 'function') {
-                hideLoader();
-            } else {
-                if (typeof showScreen === 'function') showScreen('garage');
-                if (typeof updateUI === 'function') updateUI();
-            }
-        }
-
 
 
         window.addEventListener('keydown', function(e) {
@@ -920,111 +793,6 @@
                 e.preventDefault();
             }
         }, { passive: false });
-
-
-
-        function translateToEnglish() {
-            // 1. Включаем английский режим для всей игры
-            if (typeof ysdk !== 'undefined') { ysdk.getLang = function() { return 'en'; }; }
-            window.userLang = 'en';
-
-            // 2. Полный словарь для статичных кнопок и меню
-            var dictionary = {
-                "продать авто": "Sell Car", "твой гараж": "Your Garage", "заездов": "Races",
-                "побед": "Wins", "поражений": "Defeats", "заработано": "Earned",
-                "потрачено": "Spent", "гараж": "Garage", "тюнинг": "Tuning",
-                "автосалон": "Car Dealership", "гонки": "Races", "рейтинг": "Rating",
-                "уличные гонки: возвращение": "Street Racing: Return", "инициализация двигателей...": "Initializing engines...",
-                "детали": "Parts", "цвет": "Color", "другое": "Other", "назад": "Back",
-                "прогрев резины...": "Warming up tires...", "заливка закиси азота...": "Filling nitrous oxide...", "тюнинг кузова...": "Tuning the body...", "проверка 500+ лошадей...": "Checking 500+ horses...", "готово к старту!": "Ready to start!",
-                "внешний вид (цвет кузова)": "Appearance (Body Color)", "палитра": "Palette", "заводской вид": "Factory Look",
-                "Мощность": "Power", "Уровень": "Level", "Подготовка к заезду": "Race Preparation",
-                "уличные гонки": "Street Racing", "обновить список": "Refresh List"
-            };
-
-            var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-            var textNode;
-
-            while (textNode = walker.nextNode()) {
-                var trimmedText = textNode.nodeValue.trim();
-                var lowerText = trimmedText.toLowerCase();
-                if (!trimmedText) continue;
-
-                // Прямая жесткая проверка упрямых слов в любом регистре
-                if (lowerText === "мощность") {
-                    textNode.nodeValue = textNode.nodeValue.replace(trimmedText, "Power");
-                } else if (lowerText === "уровень") {
-                    textNode.nodeValue = textNode.nodeValue.replace(trimmedText, "Level");
-                } else if (lowerText === "подготовка к заезду") {
-                    textNode.nodeValue = textNode.nodeValue.replace(trimmedText, "Race Preparation");
-                } 
-                // Все остальные статичные слова из словаря
-                else if (dictionary[lowerText]) {
-                    textNode.nodeValue = textNode.nodeValue.replace(trimmedText, dictionary[lowerText]);
-                } else {
-                    if (lowerText.includes("бензин:")) { textNode.nodeValue = textNode.nodeValue.replace(/Бензин:/i, "Fuel:"); }
-                    if (lowerText.includes("ур.")) { textNode.nodeValue = textNode.nodeValue.replace(/Ур\./i, "Lvl."); }
-                    if (lowerText.includes("л.с.")) { textNode.nodeValue = textNode.nodeValue.replace(/л\.с\./i, "hp"); }
-                }
-            }
-
-
-            // ПРЯМОЙ ПЕРЕВОД ОКНА АЗС ПО ID
-            if(document.getElementById('fuel-title')) document.getElementById('fuel-title').innerText = 'Gas Station "Red Flame"';
-            if(document.getElementById('fuel-sub')) document.getElementById('fuel-sub').innerText = 'Fuel your beast';
-            if(document.getElementById('fuel-label')) document.getElementById('fuel-label').innerText = 'Fuel in tank:';
-            if(document.getElementById('fuel-btn-5')) document.getElementById('fuel-btn-5').innerText = '+5 Liters — 500$';
-            if(document.getElementById('fuel-btn-15')) document.getElementById('fuel-btn-15').innerText = '+15 Liters — 1200$';
-            if(document.getElementById('ad-fuel-btn')) document.getElementById('ad-fuel-btn').innerText = '+5 Liters (Watch Ad)';
-            if(document.getElementById('fuel-btn-tank')) document.getElementById('fuel-btn-tank').innerText = 'Upgrade Tank (+15L) — 500 Gold';
-            if(document.getElementById('fuel-btn-close')) document.getElementById('fuel-btn-close').innerText = 'Return to Garage';
-
-            // ПРЯМОЙ ПЕРЕВОД ОКНА ОБМЕНА ВАЛЮТ ПО ID
-            if(document.getElementById('exch-title')) document.getElementById('exch-title').innerText = 'Currency Exchange';
-            if(document.getElementById('exch-sub')) document.getElementById('exch-sub').innerText = 'Best rates for racers';
-            if(document.getElementById('exch-bucks-label')) document.getElementById('exch-bucks-label').innerText = 'Your Cash';
-            if(document.getElementById('exch-gold-label')) document.getElementById('exch-gold-label').innerText = 'Your Gold';
-            if(document.getElementById('exch-btn-action')) document.getElementById('exch-btn-action').innerText = 'Exchange 50.000$ for 10 Gold';
-            if(document.getElementById('exch-btn-close')) document.getElementById('exch-btn-close').innerText = 'Return to Garage';
-
-            // 3. Перерисовываем вкладки меню, если они открыты
-            if (typeof currentTab !== 'undefined') {
-                if (currentTab === 'parts') {
-                    if (typeof showTab === 'function') showTab('parts');
-                    else if (typeof openTab === 'function') openTab('parts');
-                }
-                if (currentTab === 'market') {
-                    if (typeof showTab === 'function') showTab('market');
-                    else if (typeof openTab === 'function') openTab('market');
-                }
-                if (currentTab === 'race') {
-                    if (typeof showTab === 'function') showTab('race');
-                    else if (typeof openTab === 'function') openTab('race');
-                }
-            }
-
-            // 4. МГНОВЕННО ОБНОВЛЯЕМ ОКНО ГОНКИ (если оно открыто на экране)
-            var raceModal = document.getElementById('race-modal');
-            if (raceModal && raceModal.style.display === 'flex') {
-                if (window.currentEnemy && window.currentEnemy.isBoss) {
-                    if (typeof openBossRace === 'function') openBossRace();
-                } else if (typeof activeIdx !== 'undefined' && activeIdx !== null) {
-                    if (typeof openRace === 'function') openRace(activeIdx); // Перезапускаем обычную гонку по активному индексу
-                }
-            }
-
-            // 5. Обновляем интерфейс АЗС
-            if (typeof updateFuelUI === 'function') { updateFuelUI(); }
-
-                        // Обновляем текст и баланс в окне обмена валюты (если функции обновления есть в игре)
-            if (typeof updateExchangeUI === 'function') { updateExchangeUI(); }
-            else if (typeof updateUI === 'function') { updateUI(); }
-    
-            console.log("Язык игры успешно переключен на ENGLISH!");
-        }
-
-
-
 
                 // Блокируем вызов контекстного меню браузера в игре
         document.addEventListener('contextmenu', event => event.preventDefault());
@@ -2622,11 +2390,11 @@
         function showFuelAd() { 
             let m = player.maxFuel || 75; 
             if (player.fuel >= m) return showFuelMsg("Бак уже полон!"); 
-            if (typeof ysdk !== 'undefined') {
-                ysdk.adv.showRewardedVideo({ 
-                    callbacks: { 
-                        onRewarded: () => { 
-                    
+    
+            if (typeof vkBridge !== 'undefined') {
+                vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+                    .then((data) => {
+                        if (data.result) {
                             // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ НАЧИСЛЕНИЯ ТОПЛИВА ЗА РЕКЛАМУ ---
                             window.isGameChangingData = true;
 
@@ -2637,12 +2405,19 @@
 
                             saveAndRefresh(); 
                             showFuelMsg("Бензин залит!", !1); 
-                        }, 
-                        onError: () => showFuelMsg("Ошибка рекламы") 
-                    } 
-                }); 
-            } 
+                        } else {
+                            showFuelMsg("Ошибка рекламы");
+                        }
+                    })
+                    .catch(() => {
+                        showFuelMsg("Ошибка рекламы");
+                    });
+            } else {
+                // Если игра запущена локально без SDK ВК, можно выдать заглушку
+                showFuelMsg("Реклама недоступна");
+            }
         }
+
 
         function buyFuel(a, c) { 
             let m = player.maxFuel || 75; 
