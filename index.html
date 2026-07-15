@@ -764,11 +764,19 @@
             // Проверяем наличие моста напрямую в window
             vkBridge = window.vkBridge || (typeof vkBridge !== 'undefined' ? vkBridge : null);
     
+            // Принудительно убираем любые белые заглушки ВК через CSS стили прямо на старте
+            const style = document.createElement('style');
+            style.innerHTML = 'html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }';
+            document.head.appendChild(style);
+
             if (vkBridge) {
                 try {
-                    // Отправляем только сигнал запуска платформе, чтобы убрать белый экран
+                    // Отправляем сигнал запуска платформе
                     vkBridge.send('VKWebAppInit');
                     console.log('=== Сигнал VKWebAppInit отправлен ===');
+            
+                    // Встряхиваем фрейм ВК, чтобы он гарантированно убрал свой белый экран загрузки
+                    vkBridge.send('VKWebAppResizeWindow', { width: 800, height: 600 });
                 
                 } catch (e) {
                     console.log('Ошибка при вызове метода VK Bridge:', e);
@@ -784,10 +792,6 @@
         } else {
             startVkInit();
         }
-
-
-
-
 
         window.addEventListener('keydown', function(e) {
             // Блокируем: Пробел, Стрелки (вверх, вниз, влево, вправо), PageUp, PageDown, End, Home
