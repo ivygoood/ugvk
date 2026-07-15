@@ -764,9 +764,9 @@
             // Проверяем наличие моста напрямую в window
             vkBridge = window.vkBridge || (typeof vkBridge !== 'undefined' ? vkBridge : null);
     
-            // Принудительно убираем любые белые заглушки ВК через CSS стили прямо на старте
+            // Принудительно задаем фоновые стили, чтобы холст не скрывался
             const style = document.createElement('style');
-            style.innerHTML = 'html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }';
+            style.innerHTML = 'html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; } canvas { display: block !important; width: 100% !important; height: 100% !important; }';
             document.head.appendChild(style);
 
             if (vkBridge) {
@@ -775,8 +775,8 @@
                     vkBridge.send('VKWebAppInit');
                     console.log('=== Сигнал VKWebAppInit отправлен ===');
             
-                    // Встряхиваем фрейм ВК, чтобы он гарантированно убрал свой белый экран загрузки
-                    vkBridge.send('VKWebAppResizeWindow', { width: 800, height: 600 });
+                    // Встряхиваем фрейм ВК адаптивным запросом
+                    vkBridge.send('VKWebAppResizeWindow', { width: window.innerWidth || 800, height: window.innerHeight || 600 });
                 
                 } catch (e) {
                     console.log('Ошибка при вызове метода VK Bridge:', e);
@@ -784,6 +784,19 @@
             } else {
                 console.log('VK Bridge все еще не найден. Проверь строку подключения в <head>.');
             }
+
+            // БУДИЛЬНИК ДЛЯ ГРАФИКИ: принудительно обновляем размеры движка через 1.5 секунды
+            setTimeout(() => {
+                console.log('=== Принудительное обновление размеров холста (Resize) ===');
+                window.dispatchEvent(new Event('resize'));
+        
+                // Дополнительно ищем canvas игры и заставляем его обновиться
+                const gameCanvas = document.querySelector('canvas');
+                if (gameCanvas) {
+                    gameCanvas.style.width = '100%';
+                    gameCanvas.style.height = '100%';
+                }
+            }, 1500);
         }
 
         // Запускаем инициализацию только после того, как документ полностью готов
@@ -792,6 +805,7 @@
         } else {
             startVkInit();
         }
+
 
         window.addEventListener('keydown', function(e) {
             // Блокируем: Пробел, Стрелки (вверх, вниз, влево, вправо), PageUp, PageDown, End, Home
