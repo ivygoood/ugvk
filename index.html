@@ -1227,68 +1227,62 @@
         window.startBossRace = function() { const b = bossesDB[player.bossLvl || 0]; if (!b) return; const isEn = (typeof userLang !== 'undefined' && userLang !== 'ru'); if (player.gold < b.entryFee) { alert(isEn ? 'Need more gold 💰!' : 'Нужно больше золота 💰!'); return; } if (player.fuel < 15) { alert(isEn ? 'Need fuel ⛽!' : 'Нужен бензин ⛽!'); return; } player.gold -= b.entryFee; player.fuel -= 5; const myHp = calculateCarHp(player.currentCarId); const chance = myHp / (myHp + b.hp); if (Math.random() < chance) { player.gold += b.reward; player.bossWins++; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert(isEn ? 'BOSS DEFEATED!' : 'БОСС ПОВЕРЖЕН!'); } else { alert(isEn ? 'WIN!' : 'ПОБЕДА!'); } } else { alert(isEn ? 'DEFEAT!' : 'ПОРАЖЕНИЕ!'); } save(); updateUI(); renderAll(); };
 
         function startLoading() {
-                    // СОЗДАЕМ НАДПИСЬ АНТИЧИТА НА ЭКРАНЕ ЗАГРУЗКИ
-                    if (!document.getElementById('shield-loading-logo')) {
-                        const logoDiv = document.createElement('div');
-                        logoDiv.id = 'shield-loading-logo';
-                        logoDiv.style = `
-                            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-                            color: #555; font-family: 'Arial', sans-serif; font-size: 13px; font-weight: bold;
-                            text-transform: uppercase; letter-spacing: 3px; z-index: 9999; user-select: none;
-                            text-shadow: 0 1px 2px rgba(0,0,0,0.8); transition: opacity 0.5s ease;
-                        `;
-                        logoDiv.innerHTML = `🛡️ SHIELD ANTICHEAT PROTECTED`;
-                        document.body.appendChild(logoDiv);
+            // СОЗДАЕМ НАДПИСЬ АНТИЧИТА НА ЭКРАНЕ ЗАГРУЗКИ
+            if (!document.getElementById('shield-loading-logo')) {
+                const logoDiv = document.createElement('div');
+                logoDiv.id = 'shield-loading-logo';
+                logoDiv.style = `
+                    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+                    color: #555; font-family: 'Arial', sans-serif; font-size: 13px; font-weight: bold;
+                    text-transform: uppercase; letter-spacing: 3px; z-index: 9999; user-select: none;
+                    text-shadow: 0 1px 2px rgba(0,0,0,0.8); transition: opacity 0.5s ease;
+                `;
+                logoDiv.innerHTML = `🛡️ SHIELD ANTICHEAT PROTECTED`;
+                document.body.appendChild(logoDiv);
+            }
+
+            let progress = 0;
+            const bar = document.getElementById('loader-bar-fill');
+            const status = document.getElementById('loader-status');
+
+            // Оставляем только русский массив сообщений для ВК
+            const messages = [
+                "Прогрев резины...",
+                "Заливка закиси азота...",
+                "Тюнинг кузова...",
+                "Проверка 500+ лошадей...",
+                "Готово к старту!"
+            ];
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+
+                if (bar) bar.style.width = progress + "%";
+
+                if (status) {
+                    if (progress < 30) status.innerText = messages[0];
+                    else if (progress < 50) status.innerText = messages[1];
+                    else if (progress < 70) status.innerText = messages[2];
+                    else if (progress < 90) status.innerText = messages[3];
+                    else status.innerText = messages[4];
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+    
+                    // ПЛАВНО СТИРАЕМ НАДПИСЬ ПЕРЕД ТЕМ КАК СПРЯТАТЬ ЛОАДЕР
+                    const logo = document.getElementById('shield-loading-logo');
+                    if (logo) {
+                        logo.style.opacity = '0';
+                        setTimeout(() => logo.remove(), 500); // Удаляем из HTML через 0.5 сек
                     }
 
-                    let progress = 0;
-                    const bar = document.getElementById('loader-bar-fill');
-                    const status = document.getElementById('loader-status');
-    
-                    // Проверяем, включен ли английский язык
-                    const isEn = (typeof userLang !== 'undefined' && userLang !== 'ru');
-    
-                    // Переводим массив сообщений в зависимости от флага языка
-                    const messages = isEn ? [
-                        "Warming up tires...",
-                        "Filling nitrous oxide...",
-                        "Tuning the body...",
-                        "Checking 500+ horses...",
-                        "Ready to start!"
-                    ] : [
-                        "Прогрев резины...",
-                        "Заливка закиси азота...",
-                        "Тюнинг кузова...",
-                        "Проверка 500+ лошадей...",
-                        "Готово к старту!"
-                    ];
-
-                    const interval = setInterval(() => {
-                        progress += Math.random() * 15;
-                        if (progress > 100) progress = 100;
-
-                        bar.style.width = progress + "%";
-
-                        if (progress < 30) status.innerText = messages[0];
-                        else if (progress < 50) status.innerText = messages[1];
-                        else if (progress < 70) status.innerText = messages[2];
-                        else if (progress < 90) status.innerText = messages[3];
-                        else status.innerText = messages[4];
-
-                        if (progress >= 100) {
-                            clearInterval(interval);
-                    
-                            // ПЛАВНО СТИРАЕМ НАДПИСЬ ПЕРЕД ТЕМ КАК СПРЯТАТЬ ЛОАДЕР
-                            const logo = document.getElementById('shield-loading-logo');
-                            if (logo) {
-                                logo.style.opacity = '0';
-                                setTimeout(() => logo.remove(), 500); // Удаляем из HTML через 0.5 сек
-                            }
-
-                            setTimeout(hideLoader, 500); 
-                        }
-                    }, 200);
+                    setTimeout(hideLoader, 500); 
+                }
+            }, 200);
         }
+
 
 
 
