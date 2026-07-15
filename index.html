@@ -870,25 +870,35 @@
         }
 
 
-        // 1. Функция показа рекламы (она решает, когда запустить игру)
+        // Функция для показа стартовой рекламы
         function showStartAds() {
             console.log('Запрос на показ стартовой рекламы VK отправлен');
     
             if (typeof vkBridge !== 'undefined') {
-                vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
-                    .then((data) => {
-                        console.log('Реклама закрыта пользователем');
-                        startGame(); // <-- ЗАПУСКАЕМ ИГРУ ПОСЛЕ РЕКЛАМЫ
-                    })
-                    .catch((error) => {
-                        console.error('Реклама не показалась (ошибка или AdBlock), запускаем игру так:', error);
-                        startGame(); // <-- ВСЁ РАВНО ЗАПУСКАЕМ ИГРУ, ЧТОБЫ НЕ БЫЛО ЗАВИСАНИЯ
-                    });
+                // Запускаем рекламу и сохраняем результат в переменную
+                var adPromise = vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
+        
+                // Проверяем, поддерживает ли vkBridge на ПК современный синтаксис .then()
+                if (adPromise && typeof adPromise.then === 'function') {
+                    adPromise
+                        .then(function(data) {
+                            console.log('Реклама успешно пройдена');
+                            startGame();
+                        })
+                        .catch(function(error) {
+                            console.error('Ошибка рекламы в ВК, запускаем игру:', error);
+                            startGame();
+                        });
+                } else {
+                    // Если мы на ПК и .then() не поддерживается — просто сразу запускаем игру
+                    console.log('Локальный запуск на ПК, пропускаем ожидание рекламы');
+                    startGame();
+                }
             } else {
-                // Если игра запущена не в ВК, а просто на компьютере
-                startGame(); 
+                startGame();
             }
         }
+
 
         // 2. Ваша функция запуска (её код полностью правильный)
         function startGame() {
