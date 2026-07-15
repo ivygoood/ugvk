@@ -765,28 +765,23 @@
             vkBridge = window.vkBridge || (typeof vkBridge !== 'undefined' ? vkBridge : null);
     
             if (vkBridge) {
-                vkBridge.send('VKWebAppInit')
-                    .then((data) => {
-                        if (data.result) {
-                            console.log('=== VK Bridge успешно инициализирован ===');
-                    
-                            // Показываем рекламу ПРИ ВХОДЕ
-                            vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
-                                .then((adData) => {
-                                    console.log('Реклама при входе обработана:', adData);
-                                })
-                                .catch((error) => {
-                                    console.log('Ошибка показа рекламы при входе:', error);
-                                });
-                        }
-                    })
-                    .catch((error) => {
-                        console.log('Ошибка инициализации VK Bridge:', error);
-                    });
+                try {
+                    // Просто сообщаем платформе, что игра запустилась
+                    vkBridge.send('VKWebAppInit');
+                    console.log('=== Сигнал VKWebAppInit отправлен ===');
+            
+                    // Запускаем рекламу при входе отдельным независимым вызовом
+                    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
+                        .catch((err) => console.log('Реклама при входе отклонена или недоступна:', err));
+                
+                } catch (e) {
+                    console.log('Ошибка при вызове методов VK Bridge:', e);
+                }
             } else {
                 console.log('VK Bridge все еще не найден. Проверь строку подключения в <head>.');
             }
         }
+
 
         // Запускаем инициализацию только после того, как документ полностью готов
         if (document.readyState === 'loading') {
