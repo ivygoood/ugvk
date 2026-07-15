@@ -760,31 +760,41 @@
     <script>
         var vkBridge;
 
-        // ИНИЦИАЛИЗАЦИЯ SDK ВКОНТАКТЕ
-        if (typeof window.vkBridge !== 'undefined') {
-            vkBridge = window.vkBridge;
+        function startVkInit() {
+            // Проверяем наличие моста напрямую в window
+            vkBridge = window.vkBridge || (typeof vkBridge !== 'undefined' ? vkBridge : null);
     
-            vkBridge.send('VKWebAppInit')
-                .then((data) => {
-                    if (data.result) {
-                        console.log('=== VK Bridge успешно инициализирован ===');
-                
-                        // Показываем межстраничную рекламу ПРИ ВХОДЕ
-                        vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
-                            .then((adData) => {
-                                console.log('Реклама при входе обработана:', adData);
-                            })
-                            .catch((error) => {
-                                console.log('Ошибка показа рекламы при входе:', error);
-                            });
-                    }
-                })
-                .catch((error) => {
-                    console.log('Ошибка инициализации VK Bridge:', error);
-                });
-        } else {
-            console.log('VK Bridge не найден (возможно, локальный запуск)');
+            if (vkBridge) {
+                vkBridge.send('VKWebAppInit')
+                    .then((data) => {
+                        if (data.result) {
+                            console.log('=== VK Bridge успешно инициализирован ===');
+                    
+                            // Показываем рекламу ПРИ ВХОДЕ
+                            vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
+                                .then((adData) => {
+                                    console.log('Реклама при входе обработана:', adData);
+                                })
+                                .catch((error) => {
+                                    console.log('Ошибка показа рекламы при входе:', error);
+                                });
+                        }
+                    })
+                    .catch((error) => {
+                        console.log('Ошибка инициализации VK Bridge:', error);
+                    });
+            } else {
+                console.log('VK Bridge все еще не найден. Проверь строку подключения в <head>.');
+            }
         }
+
+        // Запускаем инициализацию только после того, как документ полностью готов
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startVkInit);
+        } else {
+            startVkInit();
+        }
+
 
 
         window.addEventListener('keydown', function(e) {
