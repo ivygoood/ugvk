@@ -766,12 +766,13 @@
     
             if (vkBridge) {
                 try {
-                    // Просто сообщаем платформе, что игра запустилась
+                    // Отправляем сигнал запуска платформе
                     vkBridge.send('VKWebAppInit');
                     console.log('=== Сигнал VKWebAppInit отправлен ===');
             
-                    // Запускаем рекламу при входе отдельным независимым вызовом
-                    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
+                    // Запускаем межстраничную рекламу через sendPromise
+                    vkBridge.sendPromise('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
+                        .then((data) => console.log('Реклама при входе показана:', data))
                         .catch((err) => console.log('Реклама при входе отклонена или недоступна:', err));
                 
                 } catch (e) {
@@ -782,13 +783,13 @@
             }
         }
 
-
         // Запускаем инициализацию только после того, как документ полностью готов
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', startVkInit);
         } else {
             startVkInit();
         }
+
 
 
 
@@ -2397,7 +2398,8 @@
             if (player.fuel >= m) return showFuelMsg("Бак уже полон!"); 
     
             if (typeof vkBridge !== 'undefined') {
-                vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+                // Используем sendPromise, чтобы работали .then() и .catch()
+                vkBridge.sendPromise('VKWebAppShowNativeAds', { ad_format: 'reward' })
                     .then((data) => {
                         if (data.result) {
                             // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ НАЧИСЛЕНИЯ ТОПЛИВА ЗА РЕКЛАМУ ---
@@ -2418,10 +2420,11 @@
                         showFuelMsg("Ошибка рекламы");
                     });
             } else {
-                // Если игра запущена локально без SDK ВК, можно выдать заглушку
+                // Если игра запущена локально без SDK ВК, выдаем заглушку
                 showFuelMsg("Реклама недоступна");
             }
         }
+
 
 
         function buyFuel(a, c) { 
