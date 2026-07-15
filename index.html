@@ -10,8 +10,9 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Это запретит браузеру крутить страницу игры */
-            position: fixed;  /* Это намертво привяжет игру к экрану */
+            overflow: hidden; /* Запрещает браузеру крутить страницу игры */
+            position: relative; /* Безопасно позиционирует игру внутри фрейма ВК */
+            background: #000; /* Делает фон черным, убирая белый экран платформы */
         }
     
         body { background: #111; color: #eee; font-family: 'Arial', sans-serif; margin: 0; text-align: center; }
@@ -438,23 +439,26 @@
         html, body {
             margin: 0 !important;
             padding: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
+            width: 100% !important;
+            height: 100% !important;
             overflow: hidden !important; /* Убирает полосы прокрутки намертво */
-            position: fixed !important;  /* Запрещает странице двигаться */
-            top: 0 !important;
-            left: 0 !important;
+            position: relative !important; /* Безопасно для iframe, не ломает координаты */
+            background: #000 !important; /* Черный фон вместо белого */
     
             /* Защита от случайного выделения элементов интерфейса синевой */
             -webkit-user-select: none;
             user-select: none;
         }
 
-        /* Фиксируем под масштаб только игровое поле, не трогая мелкие элементы */
+        /* Заставляем игровое поле занять всю выделенную платформой область */
         canvas, #game-container {
+            width: 100% !important;
+            height: 100% !important;
             max-width: 100% !important;
             max-height: 100% !important;
-        }
+            display: block !important;
+        } 
+
 
     </style>
 </head>
