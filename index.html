@@ -766,17 +766,12 @@
     
             if (vkBridge) {
                 try {
-                    // Отправляем сигнал запуска платформе
+                    // Отправляем только сигнал запуска платформе, чтобы убрать белый экран
                     vkBridge.send('VKWebAppInit');
                     console.log('=== Сигнал VKWebAppInit отправлен ===');
-            
-                    // Запускаем межстраничную рекламу через sendPromise
-                    vkBridge.sendPromise('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
-                        .then((data) => console.log('Реклама при входе показана:', data))
-                        .catch((err) => console.log('Реклама при входе отклонена или недоступна:', err));
                 
                 } catch (e) {
-                    console.log('Ошибка при вызове методов VK Bridge:', e);
+                    console.log('Ошибка при вызове метода VK Bridge:', e);
                 }
             } else {
                 console.log('VK Bridge все еще не найден. Проверь строку подключения в <head>.');
@@ -789,6 +784,7 @@
         } else {
             startVkInit();
         }
+
 
 
 
